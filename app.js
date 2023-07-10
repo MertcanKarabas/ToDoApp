@@ -23,7 +23,7 @@ function filterTodos(e) {
     }
     filterTodosFromStorage(e);
     filteredTodos.forEach(function (todo) {
-        addTodoToUI(todo);
+        addTodoToUI(todo[0]);
     });
 
 }
@@ -31,7 +31,7 @@ function filterTodos(e) {
 function filterTodosFromStorage(e) {
     let todos = JSON.parse(localStorage.getItem("Todos"));
     filteredTodos = todos.filter(function (todo) {
-        return todo.toLowerCase().includes(e.target.value.toLowerCase());
+        return todo[0].toLowerCase().includes(e.target.value.toLowerCase());
     });
 }
 
@@ -49,19 +49,36 @@ function deleteToDo(e) {
 function lineThrough(e) {
     if(e.target.style.textDecoration === "line-through") {
         e.target.style.textDecoration = "none";
+        allToDos = JSON.parse(localStorage.getItem("Todos"));
+        allToDos.forEach(function(todo, index) {
+            if(todo[0] === e.target.textContent) {
+                allToDos.splice(index, 1, [todo[0], "false"]);
+                localStorage.setItem("Todos", JSON.stringify(allToDos));
+                return;
+            }
+        });
     } else {
         e.target.style.textDecoration = "line-through";
+        allToDos = JSON.parse(localStorage.getItem("Todos"));
+        allToDos.forEach(function(todo, index) {
+            if(todo[0] === e.target.textContent) {
+                allToDos.splice(index, 1, [todo[0], "true"]);
+                localStorage.setItem("Todos", JSON.stringify(allToDos));
+                return;
+            }
+        });
     }
     
 }
 
-function deleteTodoFromStorage(deletedTodo) {
-    for (let i = 0; i < allToDos.length; i++) {
-        if (allToDos[i] === deletedTodo.textContent) {
-            allToDos.splice(i, 1);
-            break;
+function deleteTodoFromStorage(deletingToDo) {
+
+    allToDos.forEach(function(value, index) {
+        console.log(value[0] + "," + deletingToDo.textContent);
+        if(value[0] === deletingToDo.textContent) {
+            allToDos.splice(index, 1);
         }
-    }
+    });
 
     localStorage.setItem("Todos", JSON.stringify(allToDos));
 
@@ -75,7 +92,7 @@ function pageLoad() {
     if (allToDos != null || allToDos != undefined) {
         let alltodo = JSON.parse(localStorage.getItem("Todos"));
         alltodo.forEach(function (todo) {
-            addTodoToUI(todo);
+            addTodoToUI(todo[0], todo[1]);
         });
     } else {
         allToDos = [];
@@ -102,7 +119,8 @@ function toDoEkle() {
         showAlert("danger", "Lütfen bu alanı boş bırakmayınız..");
         return;
     }
-    allToDos.push(toDoIsmi);
+    let addingTodo = [toDoIsmi, "false"];
+    allToDos.push(addingTodo);
     addTodoToUI(toDoIsmi);
     addTodoToStorage();
     showAlert("success", "Başarıyla eklendi...");
@@ -114,7 +132,8 @@ function addTodoToStorage() {
     localStorage.setItem("Todos", JSON.stringify(allToDos));
 }
 
-function addTodoToUI(newtodo) {
+function addTodoToUI(newtodo, isLineThrough) {
+    
     let list = document.createElement("li");
     let link = document.createElement("a");
     let i = document.createElement("i");
@@ -130,10 +149,19 @@ function addTodoToUI(newtodo) {
 
     link.appendChild(i);
     list.appendChild(link);
+
+    if(isLineThrough === "true") {
+        addLineThrough(list);
+    }
+
     listOfToDos.appendChild(list);
 
     toDoIsmi = undefined;
     docToDoGiriniz.value = "";
+}
+
+function addLineThrough(todo) {
+    todo.style.textDecoration = "line-through";
 }
 
 function showAlert(type, message) {
